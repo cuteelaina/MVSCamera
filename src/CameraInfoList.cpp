@@ -1,0 +1,12 @@
+#include <MVSCamera.h>
+
+CameraManager::CameraInfoList::CameraInfoList(const std::shared_ptr<MV_CC_DEVICE_INFO_LIST>& device_info_list) : m_device_info_list(device_info_list) {}
+
+size_t CameraManager::CameraInfoList::size() const { return m_device_info_list->nDeviceNum; }
+
+std::string CameraManager::CameraInfoList::get_serial_number(size_t index) const
+{
+    if (!m_device_info_list || index >= m_device_info_list->nDeviceNum)
+        throw std::out_of_range("CameraInfoList index out of range");
+    return std::string(reinterpret_cast<char*>(m_device_info_list->pDeviceInfo[index]->SpecialInfo.stUsb3VInfo.chSerialNumber));
+}
