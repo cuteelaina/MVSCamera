@@ -7,6 +7,11 @@ Camera::Camera(void* handler) : m_is_streaming(false)
     HandleManager::Handle handle = m_handle_manager->get_camera();
     CameraException::check_error(MV_CC_OpenDevice(handle.m_handle), "create_camera", "MV_CC_OpenDevice");
     CameraException::check_error(MV_CC_SetImageNodeNum(handle.m_handle, image_node_num), "create_camera", "MV_CC_SetImageNodeNum");
+    CameraException::check_error(MV_CC_SetEnumValue(handle.m_handle, "TriggerMode", MV_TRIGGER_MODE_OFF), "create_camera", "MV_CC_SetEnumValue");
+    // MV_CC_SetEnumValue(handle.m_handle, "PixelFormat", PixelType_Gvsp_BGR8_Packed);
+    MV_CC_SetEnumValue(handle.m_handle, "PixelFormat", PixelType_Gvsp_BayerRG8);
+    MV_CC_SetEnumValue(handle.m_handle, "AcquisitionMode", MV_ACQ_MODE_CONTINUOUS);
+    MV_CC_SetEnumValue(handle.m_handle, "ADCBitDepth", 0u);
 }
 
 Camera::~Camera()

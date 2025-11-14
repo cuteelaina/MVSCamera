@@ -1,5 +1,8 @@
 #include <MVSCamera.h>
+#include <filesystem>
 #include <opencv2/opencv.hpp>
+
+const double show_scale = 0.5;
 
 static void on_gain_trackbar(int pos, void* userdata)
 {
@@ -10,7 +13,7 @@ static void on_gain_trackbar(int pos, void* userdata)
     cam->set_gain(gain);
 }
 
-static void on_exposure_trackbarar(int pos, void* userdata)
+static void on_exposure_trackbar(int pos, void* userdata)
 {
     if (!userdata)
         return;
@@ -22,7 +25,14 @@ static void on_exposure_trackbarar(int pos, void* userdata)
 int main()
 {
     CameraManager camera_manager;
-    auto camera = camera_manager.create_camera(camera_manager.list_cameras(), 0);
+    CameraManager::CameraInfoList camera_list = camera_manager.list_cameras();
+    for (int i = 0; i < camera_list.size(); i++)
+        std::cout << "Camera " << i << ": " << camera_list.get_serial_number(i) << std::endl;
+    std::cout << "Enter camera index to open: ";
+    int camera_index = 0;
+    std::cin >> camera_index;
+    auto camera = camera_manager.create_camera(camera_list, camera_index);
+
     CameraNoExcept safe_camera(camera);
     safe_camera.start_grabbing();
 
@@ -33,10 +43,11 @@ int main()
     int exposure_pos = 20000;
 
     cv::createTrackbar("Gain x0.1", win_name, &gain_pos, 170, on_gain_trackbar, &safe_camera);
-    cv::createTrackbar("Exposure", win_name, &exposure_pos, 50000, on_exposure_trackbarar, &safe_camera);
+    cv::createTrackbar("Exposure", win_name, &exposure_pos, 50000, on_exposure_trackbar, &safe_camera);
     std::queue<long long> frame_time;
     long long frame_time_sum = 0;
     long long last_time = 0;
+    int capture_count = 0;
 
     while (true)
     {
@@ -60,12 +71,26 @@ int main()
         }
         double avg_time = static_cast<double>(frame_time_sum) / frame_time.size();
         double fps = 1000.0 / avg_time;
-        cv::putText(frame, "FPS: " + std::to_string(static_cast<int>(fps)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
 
-        cv::imshow(win_name, frame);
-        if (cv::waitKey(1) == 27)
-        {
+        cv::Mat show_frame = frame.clone();
+        cv::putText(show_frame, "FPS: " + std::to_string(static_cast<int>(fps)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+
+        cv::resize(show_frame, show_frame, cv::Size(), show_scale, show_scale);
+
+        cv::imshow(win_name, show_frame);
+        int key = cv::waitKey(1);
+        if (key == 27 || key == 'q')
             break;
+        if (key == 's')
+        {
+            if (!std::filesystem::exists("CaptureResult"))
+                std::filesystem::create_directory("CaptureResult");
+            if (!std::filesystem::exists("CaptureResult/" + camera_list.get_serial_number(camera_index)))
+                std::filesystem::create_directory("CaptureResult/" + camera_list.get_serial_number(camera_index));
+            char filename[64];
+            sprintf(filename, "./CaptureResult/%s/capture_%03d.png", camera_list.get_serial_number(camera_index).c_str(), ++capture_count);
+            cv::imwrite(filename, frame);
+            std::cout << "Saved " << filename << std::endl;
         }
     }
     return 0;

@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.10)
 project(MVSCamera CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install)
 
 find_package(OpenCV)
@@ -27,14 +28,16 @@ target_include_directories(MVSCamera PUBLIC /opt/MVS/include)
 target_link_libraries(MVSCamera PUBLIC MvCameraControl)
 target_link_directories(MVSCamera PUBLIC /opt/MVS/lib/64)
 
-add_executable(capture test/Capture.cpp)
+add_executable(capture utils/Capture.cpp)
 target_link_libraries(capture PRIVATE MVSCamera)
-add_executable(list_devices test/ListDevice.cpp)
+add_executable(test_camera utils/TestCamera.cpp)
+target_link_libraries(test_camera PRIVATE MVSCamera)
+add_executable(list_devices utils/ListDevice.cpp)
 target_link_libraries(list_devices PRIVATE MVSCamera)
-
-enable_testing()
-add_test(NAME ListDevices COMMAND $<TARGET_FILE:list_devices>)
-add_test(NAME Capture COMMAND $<TARGET_FILE:capture>)
+add_executable(calibration utils/Calibration.cpp)
+target_link_libraries(calibration PRIVATE MVSCamera)
+add_executable(undistort utils/Undistort.cpp)
+target_link_libraries(undistort PRIVATE MVSCamera)
 
 install(TARGETS MVSCamera
     EXPORT MVSCamera
