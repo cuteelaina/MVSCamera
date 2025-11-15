@@ -56,8 +56,8 @@ install(EXPORT MVSCamera
 )
 
 install(CODE "
-    file(WRITE \"\${CMAKE_INSTALL_PREFIX}/setup_env.sh\" \"export MVSCamera_DIR=\"${CMAKE_INSTALL_PREFIX}\"\n\")
+    file(WRITE \"\${CMAKE_INSTALL_PREFIX}/setup_env.sh\" \"export MVSCamera_DIR=\\\"${CMAKE_INSTALL_PREFIX}\\\"\")
     execute_process(
         COMMAND chmod +x \"\${CMAKE_INSTALL_PREFIX}/setup_env.sh\"
-    )
-")
+    )"
+)

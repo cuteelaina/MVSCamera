@@ -114,6 +114,8 @@ public:
 
     public:
         size_t size() const;
+        bool is_empty() const;
+        std::string get_model_name(size_t index) const;
         std::string get_serial_number(size_t index) const;
     };
 
