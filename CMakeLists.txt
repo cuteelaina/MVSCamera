@@ -38,6 +38,8 @@ add_executable(calibration utils/Calibration.cpp)
 target_link_libraries(calibration PRIVATE MVSCamera)
 add_executable(undistort utils/Undistort.cpp)
 target_link_libraries(undistort PRIVATE MVSCamera)
+add_executable(record utils/Record.cpp)
+target_link_libraries(record PRIVATE MVSCamera)
 
 install(TARGETS MVSCamera
     EXPORT MVSCamera

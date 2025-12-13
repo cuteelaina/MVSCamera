@@ -24,7 +24,7 @@ CameraManager::CameraInfoList CameraManager::list_cameras()
 {
     std::shared_ptr<MV_CC_DEVICE_INFO_LIST> device_list = std::make_shared<MV_CC_DEVICE_INFO_LIST>();
     memset(device_list.get(), 0, sizeof(MV_CC_DEVICE_INFO_LIST));
-    CameraException::check_error(MV_CC_EnumDevices(MV_USB_DEVICE, device_list.get()), "list_cameras", "MV_CC_EnumDevices");
+    CameraException::check_error(MV_CC_EnumDevices(MV_USB_DEVICE | MV_GIGE_DEVICE, device_list.get()), "list_cameras", "MV_CC_EnumDevices");
     return CameraInfoList(device_list);
 }
 

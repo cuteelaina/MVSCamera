@@ -10,12 +10,22 @@ std::string CameraManager::CameraInfoList::get_model_name(size_t index) const
 {
     if (!m_device_info_list || index >= m_device_info_list->nDeviceNum)
         throw std::out_of_range("CameraInfoList index out of range");
-    return std::string(reinterpret_cast<char*>(m_device_info_list->pDeviceInfo[index]->SpecialInfo.stUsb3VInfo.chModelName));
+    if (m_device_info_list->pDeviceInfo[index]->nTLayerType == MV_USB_DEVICE)
+        return std::string(reinterpret_cast<char*>(m_device_info_list->pDeviceInfo[index]->SpecialInfo.stUsb3VInfo.chModelName));
+    else if (m_device_info_list->pDeviceInfo[index]->nTLayerType == MV_GIGE_DEVICE)
+        return std::string(reinterpret_cast<char*>(m_device_info_list->pDeviceInfo[index]->SpecialInfo.stGigEInfo.chModelName));
+    else
+        return std::string("Unknown");
 }
 
 std::string CameraManager::CameraInfoList::get_serial_number(size_t index) const
 {
     if (!m_device_info_list || index >= m_device_info_list->nDeviceNum)
         throw std::out_of_range("CameraInfoList index out of range");
-    return std::string(reinterpret_cast<char*>(m_device_info_list->pDeviceInfo[index]->SpecialInfo.stUsb3VInfo.chSerialNumber));
+    if (m_device_info_list->pDeviceInfo[index]->nTLayerType == MV_USB_DEVICE)
+        return std::string(reinterpret_cast<char*>(m_device_info_list->pDeviceInfo[index]->SpecialInfo.stUsb3VInfo.chSerialNumber));
+    else if (m_device_info_list->pDeviceInfo[index]->nTLayerType == MV_GIGE_DEVICE)
+        return std::string(reinterpret_cast<char*>(m_device_info_list->pDeviceInfo[index]->SpecialInfo.stGigEInfo.chSerialNumber));
+    else
+        return std::string("Unknown");
 }

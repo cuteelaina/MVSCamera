@@ -9,9 +9,9 @@ Camera::Camera(void* handler) : m_is_streaming(false)
     CameraException::check_error(MV_CC_SetImageNodeNum(handle.m_handle, image_node_num), "create_camera", "MV_CC_SetImageNodeNum");
     CameraException::check_error(MV_CC_SetEnumValue(handle.m_handle, "TriggerMode", MV_TRIGGER_MODE_OFF), "create_camera", "MV_CC_SetEnumValue");
     // MV_CC_SetEnumValue(handle.m_handle, "PixelFormat", PixelType_Gvsp_BGR8_Packed);
-    MV_CC_SetEnumValue(handle.m_handle, "PixelFormat", PixelType_Gvsp_BayerRG8);
-    MV_CC_SetEnumValue(handle.m_handle, "AcquisitionMode", MV_ACQ_MODE_CONTINUOUS);
-    MV_CC_SetEnumValue(handle.m_handle, "ADCBitDepth", 0u);
+    // MV_CC_SetEnumValue(handle.m_handle, "PixelFormat", PixelType_Gvsp_BayerRG8);
+    // MV_CC_SetEnumValue(handle.m_handle, "AcquisitionMode", MV_ACQ_MODE_CONTINUOUS);
+    // MV_CC_SetEnumValue(handle.m_handle, "ADCBitDepth", 0u);
 }
 
 Camera::~Camera()
@@ -33,11 +33,104 @@ void Camera::stop_grabbing()
     CameraException::check_error(MV_CC_StopGrabbing(handle.m_handle), "stop_grabbing", "MV_CC_StopGrabbing");
 }
 
+bool is_compress_format(MvGvspPixelType enType)
+{
+    switch (enType)
+    {
+    case PixelType_Gvsp_HB_Mono8:
+    case PixelType_Gvsp_HB_Mono10:
+    case PixelType_Gvsp_HB_Mono10_Packed:
+    case PixelType_Gvsp_HB_Mono12:
+    case PixelType_Gvsp_HB_Mono12_Packed:
+    case PixelType_Gvsp_HB_Mono16:
+    case PixelType_Gvsp_HB_RGB8_Packed:
+    case PixelType_Gvsp_HB_BGR8_Packed:
+    case PixelType_Gvsp_HB_RGBA8_Packed:
+    case PixelType_Gvsp_HB_BGRA8_Packed:
+    case PixelType_Gvsp_HB_RGB16_Packed:
+    case PixelType_Gvsp_HB_BGR16_Packed:
+    case PixelType_Gvsp_HB_RGBA16_Packed:
+    case PixelType_Gvsp_HB_BGRA16_Packed:
+    case PixelType_Gvsp_HB_YUV422_Packed:
+    case PixelType_Gvsp_HB_YUV422_YUYV_Packed:
+    case PixelType_Gvsp_HB_BayerGR8:
+    case PixelType_Gvsp_HB_BayerRG8:
+    case PixelType_Gvsp_HB_BayerGB8:
+    case PixelType_Gvsp_HB_BayerBG8:
+    case PixelType_Gvsp_HB_BayerRBGG8:
+    case PixelType_Gvsp_HB_BayerGB10:
+    case PixelType_Gvsp_HB_BayerGB10_Packed:
+    case PixelType_Gvsp_HB_BayerBG10:
+    case PixelType_Gvsp_HB_BayerBG10_Packed:
+    case PixelType_Gvsp_HB_BayerRG10:
+    case PixelType_Gvsp_HB_BayerRG10_Packed:
+    case PixelType_Gvsp_HB_BayerGR10:
+    case PixelType_Gvsp_HB_BayerGR10_Packed:
+    case PixelType_Gvsp_HB_BayerGB12:
+    case PixelType_Gvsp_HB_BayerGB12_Packed:
+    case PixelType_Gvsp_HB_BayerBG12:
+    case PixelType_Gvsp_HB_BayerBG12_Packed:
+    case PixelType_Gvsp_HB_BayerRG12:
+    case PixelType_Gvsp_HB_BayerRG12_Packed:
+    case PixelType_Gvsp_HB_BayerGR12:
+    case PixelType_Gvsp_HB_BayerGR12_Packed:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void Camera::get_frame(cv::Mat& frame, int timeout_ms)
 {
     HandleManager::Handle handle = m_handle_manager->get_buffer();
     MV_FRAME_OUT image_info;
     CameraException::check_error(MV_CC_GetImageBuffer(handle.m_handle, &image_info, timeout_ms), "get_frame", "MV_CC_GetImageBuffer");
+
+    uint64_t timestamp = (static_cast<uint64_t>(image_info.stFrameInfo.nDevTimeStampHigh) << 32) | image_info.stFrameInfo.nDevTimeStampLow;
+    uint64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    std::cerr << "Timestamp: " << timestamp << " Now: " << now << " Diff: " << (now - timestamp) / 1000000 << " ms" << std::endl;
+
+    if (is_compress_format(image_info.stFrameInfo.enPixelType))
+    {
+        try
+        {
+            MV_CC_HB_DECODE_PARAM decode_param;
+            decode_param.pSrcBuf = image_info.pBufAddr;
+            decode_param.nSrcLen = image_info.stFrameInfo.nFrameLen;
+            get_int_value("PayloadSize", reinterpret_cast<int&>(decode_param.nDstBufSize));
+            std::vector<unsigned char> decode_buffer(decode_param.nDstBufSize);
+            decode_param.pDstBuf = decode_buffer.data();
+            CameraException::check_error(MV_CC_HB_Decode(handle.m_handle, &decode_param), "get_frame", "MV_CC_HB_Decode");
+
+            MV_CC_PIXEL_CONVERT_PARAM_EX convert_param;
+            convert_param.nWidth = image_info.stFrameInfo.nWidth;
+            convert_param.nHeight = image_info.stFrameInfo.nHeight;
+            convert_param.pSrcData = decode_param.pDstBuf;
+            convert_param.nSrcDataLen = decode_param.nDstBufLen;
+            convert_param.enSrcPixelType = decode_param.enDstPixelType;
+            convert_param.enDstPixelType = PixelType_Gvsp_BGR8_Packed;
+            std::vector<unsigned char> buffer(convert_param.nWidth * convert_param.nHeight * 3);
+            convert_param.pDstBuffer = buffer.data();
+            convert_param.nDstBufferSize = static_cast<unsigned int>(buffer.size());
+            CameraException::check_error(MV_CC_ConvertPixelTypeEx(handle.m_handle, &convert_param), "get_frame", "MV_CC_ConvertPixelTypeEx");
+            cv::Mat img(image_info.stFrameInfo.nHeight, image_info.stFrameInfo.nWidth, CV_8UC3, buffer.data());
+            frame = img.clone();
+            CameraException::check_error(MV_CC_FreeImageBuffer(handle.m_handle, &image_info), "get_frame", "MV_CC_FreeImageBuffer");
+            return;
+        }
+        catch (const CameraException& e)
+        {
+            try
+            {
+                CameraException::check_error(MV_CC_FreeImageBuffer(handle.m_handle, &image_info), "get_frame", "MV_CC_FreeImageBuffer");
+            }
+            catch (const CameraException& e2)
+            {
+                throw CameraException(std::string("Multiple errors occurred:\n") + e.what() + "\n" + e2.what());
+            }
+            throw e;
+        }
+    }
 
     if (image_info.stFrameInfo.enPixelType == PixelType_Gvsp_BGR8_Packed)
     {

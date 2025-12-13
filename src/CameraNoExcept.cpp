@@ -10,8 +10,9 @@ bool CameraNoExcept::start_grabbing() noexcept
         m_camera->start_grabbing();
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::start_grabbing() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -22,8 +23,9 @@ bool CameraNoExcept::stop_grabbing() noexcept
         m_camera->stop_grabbing();
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::stop_grabbing() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -34,8 +36,9 @@ bool CameraNoExcept::get_frame(cv::Mat& frame, int timeout_ms) noexcept
         m_camera->get_frame(frame, timeout_ms);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::get_frame() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -46,8 +49,9 @@ bool CameraNoExcept::get_int_value(const char* name, int& value) noexcept
         m_camera->get_int_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::get_int_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -58,8 +62,9 @@ bool CameraNoExcept::set_int_value(const char* name, const int& value) noexcept
         m_camera->set_int_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_int_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -70,8 +75,9 @@ bool CameraNoExcept::get_enum_value(const char* name, unsigned int& value) noexc
         m_camera->get_enum_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::get_enum_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -82,8 +88,9 @@ bool CameraNoExcept::set_enum_value(const char* name, const unsigned int& value)
         m_camera->set_enum_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_enum_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -94,8 +101,9 @@ bool CameraNoExcept::get_bool_value(const char* name, bool& value) noexcept
         m_camera->get_bool_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::get_bool_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -106,8 +114,9 @@ bool CameraNoExcept::set_bool_value(const char* name, const bool& value) noexcep
         m_camera->set_bool_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_bool_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -118,8 +127,9 @@ bool CameraNoExcept::get_float_value(const char* name, float& value) noexcept
         m_camera->get_float_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::get_float_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -130,8 +140,9 @@ bool CameraNoExcept::set_float_value(const char* name, const float& value) noexc
         m_camera->set_float_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_float_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -142,8 +153,9 @@ bool CameraNoExcept::get_string_value(const char* name, char* value, int size) n
         m_camera->get_string_value(name, value, size);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::get_string_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -154,8 +166,9 @@ bool CameraNoExcept::set_string_value(const char* name, const char* value) noexc
         m_camera->set_string_value(name, value);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_string_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -166,8 +179,9 @@ bool CameraNoExcept::set_command_value(const char* name) noexcept
         m_camera->set_command_value(name);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_command_value() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -178,8 +192,9 @@ bool CameraNoExcept::set_gain(const float& gain) noexcept
         m_camera->set_gain(gain);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_gain() error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -190,8 +205,9 @@ bool CameraNoExcept::set_exposure_time(const float& exposure_time) noexcept
         m_camera->set_exposure_time(exposure_time);
         return true;
     }
-    catch (...)
+    catch (CameraException& e)
     {
+        std::cerr << "CameraNoExcept::set_exposure_time() error: " << e.what() << std::endl;
         return false;
     }
 }

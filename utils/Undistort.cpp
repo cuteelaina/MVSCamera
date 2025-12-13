@@ -87,9 +87,15 @@ int main()
 
         cv::Mat show_frame;
         if (is_distort)
+        {
             cv::undistort(frame, show_frame, camera_matrix, dist_coeffs);
+            cv::putText(show_frame, "Undistorted", cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+        }
         else
+        {
             show_frame = frame.clone();
+            cv::putText(show_frame, "Normal", cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+        }
         cv::putText(show_frame, "FPS: " + std::to_string(static_cast<int>(fps)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
 
         cv::resize(show_frame, show_frame, cv::Size(), show_scale, show_scale);
