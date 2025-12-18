@@ -27,7 +27,7 @@ int main()
     CameraManager camera_manager;
     CameraManager::CameraInfoList camera_list = camera_manager.list_cameras();
     for (int i = 0; i < camera_list.size(); i++)
-        std::cout << "Camera " << i << ": " << camera_list.get_serial_number(i) << std::endl;
+        std::cout << "Camera " << i << ": " << camera_list.get_serial_number(i) << " - " << camera_list.get_model_name(i) << std::endl;
     std::cout << "Enter camera index to open: ";
     int camera_index = 0;
     std::cin >> camera_index;

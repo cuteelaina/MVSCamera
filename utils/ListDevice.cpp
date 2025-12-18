@@ -8,7 +8,8 @@ int main()
     for (int i = 0; i < devices.size(); i++)
     {
         std::string serial_number = devices.get_serial_number(i);
-        std::cout << "Camera " << i << " Serial Number: " << serial_number << std::endl;
+        std::string model_name = devices.get_model_name(i);
+        std::cout << "Camera " << i << " Serial Number: " << serial_number << " - Model Name: " << model_name << std::endl;
     }
     return 0;
 }
