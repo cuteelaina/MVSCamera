@@ -1,4 +1,5 @@
 #include <MVSCamera.h>
+#include <algorithm>
 #include <filesystem>
 #include <opencv2/opencv.hpp>
 
@@ -27,6 +28,111 @@ static void on_exposure_trackbar(int pos, void* userdata)
 
 int main(int argc, char** argv)
 {
+    if (argc != 1 && std::string(argv[1]) == "captured")
+    {
+        std::vector<std::string> serial_numbers;
+        if (std::filesystem::exists("CaptureResult"))
+        {
+            for (const auto& entry : std::filesystem::directory_iterator("CaptureResult"))
+                if (entry.is_directory())
+                    serial_numbers.push_back(entry.path().filename().string());
+        }
+
+        if (serial_numbers.empty())
+        {
+            std::cout << "No captured data found in CaptureResult." << std::endl;
+            return 0;
+        }
+
+        for (size_t i = 0; i < serial_numbers.size(); i++)
+            std::cout << "Camera " << i << ": " << serial_numbers[i] << std::endl;
+
+        std::cout << "Enter camera index to calibrate: ";
+        int camera_index = 0;
+        std::cin >> camera_index;
+
+        if (camera_index < 0 || camera_index >= serial_numbers.size())
+        {
+            std::cout << "Invalid index." << std::endl;
+            return 0;
+        }
+
+        std::string selected_serial = serial_numbers[camera_index];
+        std::string capture_path = "CaptureResult/" + selected_serial;
+        std::vector<std::string> images;
+        for (const auto& entry : std::filesystem::directory_iterator(capture_path))
+        {
+            if (entry.path().extension() == ".png")
+                images.push_back(entry.path().string());
+        }
+        std::sort(images.begin(), images.end());
+
+        std::vector<std::vector<cv::Point3f>> object_points;
+        std::vector<std::vector<cv::Point2f>> image_points;
+        cv::Size image_size;
+        int valid_count = 0;
+
+        for (const auto& img_path : images)
+        {
+            cv::Mat frame = cv::imread(img_path);
+            if (frame.empty())
+                continue;
+
+            if (image_size.width == 0 && image_size.height == 0)
+                image_size = frame.size();
+
+            std::vector<cv::Point2f> corners;
+            cv::Mat gray;
+            cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+            bool pattern_founded = cv::findChessboardCorners(gray, cv::Size(chessboard_width, chessboard_height), corners, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE | cv::CALIB_CB_FAST_CHECK);
+
+            if (pattern_founded)
+            {
+                cv::cornerSubPix(gray, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.0001));
+
+                std::vector<cv::Point3f> obj;
+                for (int i = 0; i < chessboard_height; i++)
+                    for (int j = 0; j < chessboard_width; j++)
+                        obj.emplace_back(j * chessboard_size, i * chessboard_size, 0.0f);
+
+                object_points.push_back(obj);
+                image_points.push_back(corners);
+                valid_count++;
+                std::cout << "Processed " << img_path << ": Pattern Found" << std::endl;
+            }
+            else
+            {
+                std::cout << "Processed " << img_path << ": Pattern Not Found" << std::endl;
+            }
+        }
+
+        if (valid_count >= 10)
+        {
+            std::cout << "Calibrating camera with " << valid_count << " captures..." << std::endl;
+            cv::Mat camera_matrix = cv::Mat::eye(3, 3, CV_64F);
+            cv::Mat dist_coeffs = cv::Mat::zeros(8, 1, CV_64F);
+            std::vector<cv::Mat> rvecs, tvecs;
+            double rms = cv::calibrateCamera(object_points, image_points, image_size, camera_matrix, dist_coeffs, rvecs, tvecs);
+            std::cout << "Calibration done with RMS error = " << rms << std::endl;
+            std::cout << "Camera Matrix: " << std::endl << camera_matrix << std::endl;
+            std::cout << "Distortion Coefficients: " << std::endl << dist_coeffs << std::endl;
+
+            if (!std::filesystem::exists("CalibrationResult"))
+                std::filesystem::create_directory("CalibrationResult");
+            cv::FileStorage fs("CalibrationResult/" + selected_serial + ".yaml", cv::FileStorage::WRITE);
+            fs << "Camera_Matrix" << camera_matrix;
+            fs << "Distortion_Coefficients" << dist_coeffs;
+            fs.release();
+            std::cout << "Calibration data saved to CalibrationResult/" << selected_serial << ".yaml" << std::endl;
+        }
+        else
+        {
+            std::cout << "Not enough valid captures for calibration (found " << valid_count << ")." << std::endl;
+        }
+
+        return 0;
+    }
+
     CameraManager camera_manager;
     CameraManager::CameraInfoList camera_list = camera_manager.list_cameras();
     for (int i = 0; i < camera_list.size(); i++)
