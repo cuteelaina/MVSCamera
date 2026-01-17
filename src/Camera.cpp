@@ -86,9 +86,9 @@ void Camera::get_frame(cv::Mat& frame, int timeout_ms)
     MV_FRAME_OUT image_info;
     CameraException::check_error(MV_CC_GetImageBuffer(handle.m_handle, &image_info, timeout_ms), "get_frame", "MV_CC_GetImageBuffer");
 
-    uint64_t timestamp = (static_cast<uint64_t>(image_info.stFrameInfo.nDevTimeStampHigh) << 32) | image_info.stFrameInfo.nDevTimeStampLow;
-    uint64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    std::cerr << "Timestamp: " << timestamp << " Now: " << now << " Diff: " << (now - timestamp) / 1000000 << " ms" << std::endl;
+    // uint64_t timestamp = (static_cast<uint64_t>(image_info.stFrameInfo.nDevTimeStampHigh) << 32) | image_info.stFrameInfo.nDevTimeStampLow;
+    // uint64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // std::cerr << "Timestamp: " << timestamp << " Now: " << now << " Diff: " << (now - timestamp) / 1000000 << " ms" << std::endl;
 
     if (is_compress_format(image_info.stFrameInfo.enPixelType))
     {
