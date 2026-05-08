@@ -90,6 +90,10 @@ int main(int argc, char** argv)
             {
                 cv::cornerSubPix(gray, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.0001));
 
+                cv::drawChessboardCorners(frame, cv::Size(chessboard_width, chessboard_height), corners, pattern_founded);
+                cv::imshow("Corners", frame);
+                cv::waitKey(0);
+
                 std::vector<cv::Point3f> obj;
                 for (int i = 0; i < chessboard_height; i++)
                     for (int j = 0; j < chessboard_width; j++)
@@ -105,6 +109,7 @@ int main(int argc, char** argv)
                 std::cout << "Processed " << img_path << ": Pattern Not Found" << std::endl;
             }
         }
+        cv::destroyAllWindows();
 
         if (valid_count >= 10)
         {
@@ -124,6 +129,21 @@ int main(int argc, char** argv)
             fs << "Distortion_Coefficients" << dist_coeffs;
             fs.release();
             std::cout << "Calibration data saved to CalibrationResult/" << selected_serial << ".yaml" << std::endl;
+
+            // 计算重投影误差
+            double total_error = 0.0;
+            int total_points = 0;
+            for (size_t i = 0; i < object_points.size(); i++)
+            {
+                std::vector<cv::Point2f> projected_points;
+                cv::projectPoints(object_points[i], rvecs[i], tvecs[i], camera_matrix, dist_coeffs, projected_points);
+                double error = cv::norm(image_points[i], projected_points, cv::NORM_L2);
+                total_error += error * error;
+                total_points += object_points[i].size();
+                std::cout << "Capture " << i + 1 << ": Reprojection Error = " << std::sqrt(error * error / object_points[i].size()) << std::endl;
+            }
+            double avg_error = total_error / total_points;
+            std::cout << "Average reprojection error: " << avg_error << std::endl;
         }
         else
         {
@@ -152,7 +172,7 @@ int main(int argc, char** argv)
     int exposure_pos = 20000;
 
     cv::createTrackbar("Gain x0.1", win_name, &gain_pos, 170, on_gain_trackbar, &safe_camera);
-    cv::createTrackbar("Exposure", win_name, &exposure_pos, 50000, on_exposure_trackbar, &safe_camera);
+    cv::createTrackbar("Exposure", win_name, &exposure_pos, 100000, on_exposure_trackbar, &safe_camera);
     std::queue<long long> frame_time;
     long long frame_time_sum = 0;
     long long last_time = 0;
@@ -237,6 +257,21 @@ int main(int argc, char** argv)
         fs << "Distortion_Coefficients" << dist_coeffs;
         fs.release();
         std::cout << "Calibration data saved to CalibrationResult/" << camera_list.get_serial_number(camera_index) << ".yaml" << std::endl;
+
+        // 计算重投影误差
+        double total_error = 0.0;
+        int total_points = 0;
+        for (size_t i = 0; i < object_points.size(); i++)
+        {
+            std::vector<cv::Point2f> projected_points;
+            cv::projectPoints(object_points[i], rvecs[i], tvecs[i], camera_matrix, dist_coeffs, projected_points);
+            double error = cv::norm(image_points[i], projected_points, cv::NORM_L2);
+            total_error += error * error;
+            total_points += object_points[i].size();
+            std::cout << "Capture " << i + 1 << ": Reprojection Error = " << std::sqrt(error * error / object_points[i].size()) << std::endl;
+        }
+        double avg_error = total_error / total_points;
+        std::cout << "Average reprojection error: " << avg_error << std::endl;
     }
     else
     {

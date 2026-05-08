@@ -1,7 +1,7 @@
 #include <MVSCamera.h>
 
 
-Camera::Camera(void* handler) : m_is_streaming(false)
+Camera::Camera(void* handler) : m_is_streaming(false), m_sdk_context(SDKContext::get_context())
 {
     m_handle_manager = std::make_unique<HandleManager>(handler);
     HandleManager::Handle handle = m_handle_manager->get_camera();

@@ -1,25 +1,5 @@
 #include <MVSCamera.h>
 
-bool CameraManager::initialized = false;
-std::mutex CameraManager::init_mutex;
-
-CameraManager::CameraManager()
-{
-    std::unique_lock<std::mutex> lock(init_mutex);
-    if (!initialized)
-    {
-        MV_CC_Initialize();
-        std::cout << "Camera SDK Initialized" << std::endl;
-        initialized = true;
-        auto finalize = []()
-        {
-            std::cout << "Camera SDK Finalized" << std::endl;
-            MV_CC_Finalize();
-        };
-        std::atexit(finalize);
-    }
-}
-
 CameraManager::CameraInfoList CameraManager::list_cameras()
 {
     std::shared_ptr<MV_CC_DEVICE_INFO_LIST> device_list = std::make_shared<MV_CC_DEVICE_INFO_LIST>();

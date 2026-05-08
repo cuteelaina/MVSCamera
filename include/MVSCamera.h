@@ -1,6 +1,54 @@
 #pragma once
 #include <MvCameraControl.h>
+#include <atomic>
+#include <iostream>
+#include <memory>
+#include <mutex>
 #include <opencv2/opencv.hpp>
+#include <string>
+
+class SDKContext
+{
+private:
+    SDKContext() { initialize_sdk(); }
+
+    static void initialize_sdk()
+    {
+        bool expected = false;
+        if (s_initialized.compare_exchange_strong(expected, true))
+        {
+            MV_CC_Initialize();
+            std::cout << "Camera SDK Initialized" << std::endl;
+        }
+    }
+
+    static void finalize_sdk()
+    {
+        bool expected = true;
+        if (s_initialized.compare_exchange_strong(expected, false))
+        {
+            std::cout << "Camera SDK Finalized" << std::endl;
+            MV_CC_Finalize();
+        }
+    }
+
+public:
+    static std::shared_ptr<SDKContext> get_context()
+    {
+        std::call_once(s_once, [] { s_instance.reset(new SDKContext()); });
+        return s_instance;
+    }
+    ~SDKContext() { finalize_sdk(); }
+    SDKContext(const SDKContext&) = delete;
+    SDKContext& operator=(const SDKContext&) = delete;
+    SDKContext(SDKContext&&) = delete;
+    SDKContext& operator=(SDKContext&&) = delete;
+
+private:
+    inline static std::once_flag s_once;
+    inline static std::atomic_bool s_initialized{false};
+    inline static std::shared_ptr<SDKContext> s_instance;
+};
 
 class Camera
 {
@@ -37,6 +85,7 @@ public:
 
 private:
     std::unique_ptr<HandleManager> m_handle_manager;
+    std::shared_ptr<SDKContext> m_sdk_context;
     bool m_is_open = false;
     bool m_is_streaming = false;
 
@@ -100,8 +149,8 @@ public:
 
 class CameraManager
 {
-    static bool initialized;
-    static std::mutex init_mutex;
+private:
+    std::shared_ptr<SDKContext> m_sdk_context;
 
 public:
     class CameraInfoList
@@ -119,7 +168,7 @@ public:
         std::string get_serial_number(size_t index) const;
     };
 
-    CameraManager();
+    CameraManager() : m_sdk_context(SDKContext::get_context()){};
 
     CameraInfoList list_cameras();
 

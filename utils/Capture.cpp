@@ -43,7 +43,7 @@ int main()
     int exposure_pos = 20000;
 
     cv::createTrackbar("Gain x0.1", win_name, &gain_pos, 170, on_gain_trackbar, &safe_camera);
-    cv::createTrackbar("Exposure", win_name, &exposure_pos, 50000, on_exposure_trackbar, &safe_camera);
+    cv::createTrackbar("Exposure", win_name, &exposure_pos, 200000, on_exposure_trackbar, &safe_camera);
     std::queue<long long> frame_time;
     long long frame_time_sum = 0;
     long long last_time = 0;
