@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install)
 
 find_package(OpenCV)
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge sensor_msgs)
 message(STATUS "OpenCV library status:")
 message(STATUS "    config: ${OpenCV_DIR}")
 message(STATUS "    version: ${OpenCV_VERSION}")
@@ -40,6 +41,9 @@ add_executable(undistort utils/Undistort.cpp)
 target_link_libraries(undistort PRIVATE MVSCamera)
 add_executable(record utils/Record.cpp)
 target_link_libraries(record PRIVATE MVSCamera)
+add_executable(ros_publisher utils/RosPublisher.cpp)
+target_include_directories(ros_publisher PRIVATE ${catkin_INCLUDE_DIRS})
+target_link_libraries(ros_publisher PRIVATE MVSCamera ${catkin_LIBRARIES})
 
 install(TARGETS MVSCamera
     EXPORT MVSCamera

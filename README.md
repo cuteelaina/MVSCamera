@@ -41,6 +41,10 @@ source install/setup_env.sh
 - `utils/readme/README-Calibration.md`：棋盘格标定与参数保存。
 - `utils/readme/README-Undistort.md`：加载标定结果进行去畸变显示。
 - `utils/readme/README-Record.md`：录制视频文件。
+- `utils/readme/README-RosPublisher.md`：发布相机图像到 ROS 话题（mono8），供下游标定/预览工具订阅。
+- `preview_window.py`：订阅话题实时预览；
+- `capture_charuco_ros.py`：订阅话题采集标定照片；
+- `calibrate_charuco.py`：离线求解相机内参。
 
 ## 运行说明（通用）
 
