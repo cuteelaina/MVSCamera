@@ -29,7 +29,8 @@ int main()
     safe_camera.start_grabbing();
 
     const char* win_name = "Camera";
-    cv::namedWindow(win_name, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(win_name, cv::WINDOW_NORMAL);
+    cv::resizeWindow(win_name, 1280, 720);
 
     int gain_pos = 170;
     int exposure_pos = 4000;
@@ -85,6 +86,8 @@ int main()
         cv::putText(frame, "Device FPS: " + std::to_string(camera_fps), cv::Point(10, 70), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
 
         cv::imshow(win_name, frame);
+        if (cv::getWindowProperty(win_name, cv::WND_PROP_AUTOSIZE) != 0)
+            break;
         if (cv::waitKey(1) == 27)
         {
             break;

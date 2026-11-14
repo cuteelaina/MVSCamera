@@ -67,6 +67,7 @@ int main(int argc, char** argv)
     // 本地预览窗口 + 曝光/增益轨迹条
     const std::string win_title = "GigE Camera Preview - " + topic;
     cv::namedWindow(win_title, cv::WINDOW_NORMAL);
+    cv::resizeWindow(win_title, 1280, 720);
 
     int gain_pos = 70;
     int exposure_pos = 20000;

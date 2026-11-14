@@ -91,8 +91,15 @@ int main(int argc, char** argv)
                 cv::cornerSubPix(gray, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.0001));
 
                 cv::drawChessboardCorners(frame, cv::Size(chessboard_width, chessboard_height), corners, pattern_founded);
+                cv::namedWindow("Corners", cv::WINDOW_NORMAL);
+                cv::resizeWindow("Corners", frame.cols, frame.rows);
                 cv::imshow("Corners", frame);
-                cv::waitKey(0);
+                while (true)
+                {
+                    int key = cv::waitKey(1);
+                    if (key != -1 || cv::getWindowProperty("Corners", cv::WND_PROP_AUTOSIZE) != 0)
+                        break;
+                }
 
                 std::vector<cv::Point3f> obj;
                 for (int i = 0; i < chessboard_height; i++)
@@ -166,7 +173,8 @@ int main(int argc, char** argv)
     safe_camera.start_grabbing();
 
     const char* win_name = "Camera";
-    cv::namedWindow(win_name, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(win_name, cv::WINDOW_NORMAL);
+    cv::resizeWindow(win_name, 1280, 720);
 
     int gain_pos = 70;
     int exposure_pos = 20000;
@@ -225,6 +233,8 @@ int main(int argc, char** argv)
         cv::resize(show_frame, show_frame, cv::Size(), show_scale, show_scale);
 
         cv::imshow(win_name, show_frame);
+        if (cv::getWindowProperty(win_name, cv::WND_PROP_AUTOSIZE) != 0)
+            break;
         int key = cv::waitKey(1);
         if (key == 27 || key == 'q')
             break;

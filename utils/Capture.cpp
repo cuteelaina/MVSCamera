@@ -37,7 +37,8 @@ int main()
     safe_camera.start_grabbing();
 
     const char* win_name = "Camera";
-    cv::namedWindow(win_name, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(win_name, cv::WINDOW_NORMAL);
+    cv::resizeWindow(win_name, 1280, 720);
 
     int gain_pos = 70;
     int exposure_pos = 20000;
@@ -78,6 +79,8 @@ int main()
         cv::resize(show_frame, show_frame, cv::Size(), show_scale, show_scale);
 
         cv::imshow(win_name, show_frame);
+        if (cv::getWindowProperty(win_name, cv::WND_PROP_AUTOSIZE) != 0)
+            break;
         int key = cv::waitKey(1);
         if (key == 27 || key == 'q')
             break;
